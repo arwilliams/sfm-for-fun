@@ -1,10 +1,11 @@
 #pragma once
 
-#include "matrix.hh"
+#include "linalg/matrix.hh"
 
 #include <ostream>
 
 namespace sfm {
+namespace linalg {
 
 template <typename Derived>
 std::ostream &operator<<(std::ostream &out, const MatrixBase<Derived> &A) {
@@ -20,4 +21,5 @@ std::ostream &operator<<(std::ostream &out, const MatrixBase<Derived> &A) {
 	return out;
 }
 
-}  // namespace sfm
+}
+}

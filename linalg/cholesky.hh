@@ -1,16 +1,17 @@
 #pragma once
 
-#include "matrix.hh"
+#include "linalg/matrix.hh"
 
 #include <cassert>
 #include <cmath>
 
 namespace sfm {
+namespace linalg {
 
 template <class Derived>
 bool cholesky_in_place(MatrixBase<Derived> &A) {
     constexpr double SMALL_VALUE = 1e-10;
-    assert_square(A);
+    ASSERT_SQUARE(A);
     for (int i = 0; i < A.rows(); ++i) {
         for (int j = 0; j < A.cols(); ++j) {
             if (j > i) {
@@ -47,10 +48,10 @@ template <class Derived, class OtherDerived>
 auto solve_forward_sub(
         const MatrixBase<Derived> &L,
         const MatrixBase<OtherDerived> &b) {
-    assert_square(L);
+    ASSERT_SQUARE(L);
     static constexpr int DIM = traits<Derived>::rows;
-    assert_is_vector<DIM>(b);
-    assert_same_scalar_type(L, b);
+    ASSERT_IS_VECTOR<DIM>(b);
+    ASSERT_SAME_SCALAR_TYPE(L, b);
     constexpr double SMALL_VALUE = 1e-10;
 
     Vector<typename traits<Derived>::scalar_t, DIM> y;
@@ -69,10 +70,10 @@ auto solve_forward_sub(
 template <class Derived, class OtherDerived>
 auto solve_back_sub(const MatrixBase<Derived> &U,
                     const MatrixBase<OtherDerived> &y) {
-    assert_square(U);
+    ASSERT_SQUARE(U);
     static constexpr int DIM = traits<Derived>::rows;
-    assert_is_vector<DIM>(y);
-    assert_same_scalar_type(U, y);
+    ASSERT_IS_VECTOR<DIM>(y);
+    ASSERT_SAME_SCALAR_TYPE(U, y);
     auto x = Vector<typename traits<Derived>::scalar_t, DIM>::zero();
     constexpr double SMALL_VALUE = 1e-10;
 
@@ -98,7 +99,7 @@ class CholeskyDecomposition {
     static constexpr int DIM = traits<Derived>::rows;
 
  	explicit CholeskyDecomposition(const MatrixBase<Derived> &A) {
-        assert_square(A);
+        ASSERT_SQUARE(A);
         L_ = A;
         if (cholesky_in_place(L_)) {
             status_ = CholeskyStatus::OKAY;
@@ -126,4 +127,5 @@ class CholeskyDecomposition {
     CholeskyStatus status_;
 };
 
+}  // namespace linalg
 }  // namespace sfm

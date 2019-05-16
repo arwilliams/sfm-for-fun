@@ -1,6 +1,7 @@
 #pragma once
 
 namespace sfm {
+namespace linalg {
 
 template <typename T>
 struct traits;
@@ -35,4 +36,5 @@ class Column;
 template <class Derived>
 class Row;
 
+}
 }

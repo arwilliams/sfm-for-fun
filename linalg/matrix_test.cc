@@ -1,9 +1,10 @@
-#include "matrix.hh"
+#include "linalg/matrix.hh"
 
 #include <cassert>
 #include <iostream>
 
 namespace sfm {
+namespace linalg {
 
 template <int ROWS, int COLS>
 Matrix<double, ROWS, COLS> make_matrix() {
@@ -100,6 +101,7 @@ void col_test() {
 
     const auto to_add = make_matrix<ROWS, 1>();
 
+    m.col(COL) = m.col(COL);
     m.col(COL) += to_add;
     for (int i = 0; i < ROWS; ++i) {
         assert(m(i, COL) == col(i) + to_add(i, 0));
@@ -115,14 +117,15 @@ void row_test() {
     const Matrix<double, 1, COLS> row = m.row(ROW);
 
     for (int j = 0; j < COLS; ++j) {
-        assert(row(0, j) == m(ROW, j));
+        assert(row(j) == m(ROW, j));
     }
 
     const auto to_add = make_matrix<1, COLS>();
 
+    m.row(ROW) = m.row(ROW);
     m.row(ROW) += to_add;
     for (int j = 0; j < COLS; ++j) {
-        assert(m(ROW, j) == row(0, j) + to_add(0, j));
+        assert(m(ROW, j) == row(j) + to_add(j));
     }
 }
 
@@ -175,34 +178,35 @@ void matrix_product_test() {
 }
 
 }
+}
 
 int main() {
     std::cout << "rows_cols_test..." << std::endl;
-    sfm::rows_cols_test();
+    sfm::linalg::rows_cols_test();
 
     std::cout << "zero_matrix_test..." << std::endl;
-    sfm::zero_matrix_test();
+    sfm::linalg::zero_matrix_test();
 
     std::cout << "identity_matrix_test..." << std::endl;
-    sfm::identity_matrix_test();
+    sfm::linalg::identity_matrix_test();
 
     std::cout << "transpose_test..." << std::endl;
-    sfm::transpose_test();
+    sfm::linalg::transpose_test();
 
     std::cout << "col_test..." << std::endl;
-    sfm::col_test();
+    sfm::linalg::col_test();
 
     std::cout << "row_test..." << std::endl;
-    sfm::row_test();
+    sfm::linalg::row_test();
 
     std::cout << "cmptwise_scalar_op_test..." << std::endl;
-    sfm::cmptwise_scalar_op_test();
+    sfm::linalg::cmptwise_scalar_op_test();
 
     std::cout << "cmptwise_binary_op_test..." << std::endl;
-    sfm::cmptwise_binary_op_test();
+    sfm::linalg::cmptwise_binary_op_test();
 
     std::cout << "matrix_product_test..." << std::endl;
-    sfm::matrix_product_test();
+    sfm::linalg::matrix_product_test();
 
     std::cout << "All tests passed!" << std::endl;
     return 0;
