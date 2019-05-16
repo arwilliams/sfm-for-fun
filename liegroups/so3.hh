@@ -5,26 +5,63 @@
 namespace sfm {
 namespace liegroups {
 
+//
+// An element of the Lie group SO(3), representing an
+// orthogonal linear transformation of 3-space.
+//
 class SO3 {
  public:
-    SO3();
-
-    explicit SO3(const linalg::Matrix3d &rot);
-
+    //
+    // SO(3) has dimension 3
+    //
     static constexpr int DOF = 3;
 
+    //
+    // Element of the Lie algebra so(3),
+    // (i.e. an axis-angle vector).
+    //
     using DifferentialType = linalg::Vector<double, DOF>;
 
+    //
+    // Matrix representing a linear map from so(3) to so(3)
+    //
     using DifferentialMapping = linalg::Matrix<double, DOF, DOF>;
 
+    //
+    // Defaults to the identity.
+    //
+    SO3();
+
+    //
+    // Does not project the input matrix.
+    //
+    explicit SO3(const linalg::Matrix3d &rot);
+
+    //
+    // Group product.
+    //
     SO3 operator*(const SO3 &other) const;
 
+    //
+    // Group inverse.
+    //
+    SO3 inverse() const;
+
+    //
+    // Group action: left matrix multiplication.
+    //
+    linalg::Vector3d operator*(const linalg::Vector3d &x) const;
+
+    //
+    // Exponential map and its right-invariant differential.
+    //
     static SO3 exp(const DifferentialType &w,
                    DifferentialMapping *const d_result_by_input = nullptr);
 
+    //
+    // Inverse of exponential and its right-invariant differential.
+    //
     DifferentialType log(DifferentialMapping *const d_result_by_self = nullptr) const;
-
-    SO3 inverse() const;
 
     const linalg::Matrix3d &as_matrix() const { return rot_; }
 

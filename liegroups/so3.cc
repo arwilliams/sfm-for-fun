@@ -51,6 +51,14 @@ SO3 SO3::operator*(const SO3 &other) const {
     return SO3(rot_ * other.rot_);
 }
 
+SO3 SO3::inverse() const {
+    return SO3(rot_.transpose());
+}
+
+linalg::Vector3d SO3::operator*(const linalg::Vector3d &x) const {
+    return rot_ * x;
+}
+
 SO3 SO3::exp(const DifferentialType &w,
              DifferentialMapping *const d_result_by_input) {
     const double theta = w.norm();
@@ -142,10 +150,6 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_input
     }
 
     return theta * DifferentialType(abs_a * sgn_a, abs_b * sgn_b, abs_c * sgn_c);
-}
-
-SO3 SO3::inverse() const {
-    return SO3(rot_.transpose());
 }
 
 linalg::Matrix3d SO3::skew_matrix(const DifferentialType &w) {
