@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 #include "math/clamp.hh"
 
@@ -79,6 +80,9 @@ SO3 SO3::exp(const DifferentialType &w,
 
 SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_input) const {
 
+    // log differential unimplemented.
+    assert(d_result_by_input == nullptr);
+
     // Extract the skew-symmetric part w --- 
     // to get the normalized axis we need to divde w by sin(theta),
     // then the correct norm is theta.
@@ -89,7 +93,7 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_input
     const double cos_theta = 0.5 * (trace - 1.0);
     const double sin_theta_sq = w.squared_norm();
 
-    if (cos_theta > 1. - 1e-8) {
+    if (cos_theta > 0.999856) {
         //
         // Small angle --- sin(theta) / theta close to 1, so
         // there is enough information in the anti-symmetric part.
@@ -99,15 +103,15 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_input
         // uses only even powers so can compute using sin_theta_sq,
         // without taking square root.
         //
-        const double inv_sin_theta =
+        const double inv_sinc_theta =
             1.0 + sin_theta_sq / 6.0
                 + sin_theta_sq * sin_theta_sq * (3.0 / 40.0)
                 + sin_theta_sq * sin_theta_sq * sin_theta_sq * (5.0 / 112.0);
 
-        return w * inv_sin_theta;
+        return w * inv_sinc_theta;
     }
 
-    if (cos_theta > -1. + 1e-8) {
+    if (cos_theta > -0.99) {
         // Reasonable angle.
         const double theta = std::acos(cos_theta);
         const double sin_theta = std::sqrt(std::max(sin_theta_sq, 0.));
@@ -116,52 +120,43 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_input
 
     //
     // Angle near pi --- sin(theta) / theta is close to zero, so
-    // we can't use the symmetric part. instead we must factor
-    // antisymmetric part, making an arbitrary choice of sign in the
-    // process.
+    // we use the symmetric part.
     //
     const double sin_theta = std::sqrt(std::max(sin_theta_sq, 0.));
     const double theta = M_PI - std::asin(math::clamp(sin_theta, -1., 1.));
 
-    const linalg::Matrix3d B = 0.5 * (rot_ + linalg::Matrix3d::identity());
-    const double a_sq = B(0, 0);
-    const double abs_a = std::sqrt(a_sq);
+    const double inv_b = (theta * theta) / (1. - cos_theta);
 
-    const double b_sq = B(1, 1);
-    const double abs_b = std::sqrt(b_sq);
+    const linalg::Matrix3d B =
+        inv_b * ((rot_ + rot_.transpose()) / 2. - linalg::Matrix3d::identity());
+    const double w0_sq = (B(0, 0) - B(1, 1) - B(2, 2)) / 2.;
+    const double w1_sq = -B(2, 2) - w0_sq;
+    const double w2_sq = -B(1, 1) - w0_sq;
 
-    const double c_sq = B(2, 2);
-    const double abs_c = std::sqrt(c_sq);
+    const double w0_abs = std::sqrt(w0_sq);
+    const double w1_abs = std::sqrt(w1_sq);
+    const double w2_abs = std::sqrt(w2_sq);
 
-    const double ab = B(0, 1);
-    short sgn_a, sgn_b, sgn_c;
-    sgn_a = 1;
-    if (ab < 0) {
-        sgn_b = -1;
-    } else {
-        sgn_b = 1;
-    }
+    const double w0w1 = B(1, 0);
+    const short sgn_w0 = 1;
+    const short sgn_w1 = w0w1 >= 0. ? 1 : -1;
 
-    const double ac = B(0, 2);
-    if (ac < 0) {
-        sgn_c = -1;
-    } else {
-        sgn_c = 1;
-    }
+    const double w0w2 = B(2, 0);
+    const short sgn_w2 = w0w2 >= 0. ? 1 : -1;
 
-    return theta * DifferentialType(abs_a * sgn_a, abs_b * sgn_b, abs_c * sgn_c);
+    return DifferentialType(sgn_w0 * w0_abs, sgn_w1 * w1_abs, sgn_w2 * w2_abs);
 }
 
 linalg::Matrix3d SO3::skew_matrix(const DifferentialType &w) {
     linalg::Matrix3d wx = linalg::Matrix3d::zero();
-    wx(1, 0) = w(2, 0);
-    wx(0, 1) = -w(2, 0);
+    wx(1, 0) = w(2);
+    wx(0, 1) = -w(2);
 
-    wx(2, 0) = -w(1, 0);
-    wx(0, 2) = w(1, 0);
+    wx(2, 0) = -w(1);
+    wx(0, 2) = w(1);
 
-    wx(2, 1) = w(0, 0);
-    wx(1, 2) = -w(0, 0);
+    wx(2, 1) = w(0);
+    wx(1, 2) = -w(0);
 
     return wx;
 }

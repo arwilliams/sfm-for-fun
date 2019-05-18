@@ -184,7 +184,7 @@ void log_of_rotation_by_pi() {
 }
 
 void log_of_angle_somewhat_close_to_pi() {
-    constexpr double THETA = M_PI - 1e-8;
+    constexpr double THETA = M_PI - 1e-3;
     const SO3::DifferentialType axis_angle =
         SO3::DifferentialType(1.2, 0.1, 0.7).normalized() * THETA;
     const SO3 rot = SO3::exp(axis_angle);
