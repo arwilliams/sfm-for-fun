@@ -307,9 +307,20 @@ class MatrixBase {
     }
 
     Derived normalized() const {
-        Derived out = *this;
+        Derived out = this->derived();
         out.normalize();
         return out;
+    }
+
+    template <class OtherDerived>
+    scalar_t dot(const OtherDerived &other) const {
+        ASSERT_IS_VECTOR<rows()>(*this);
+        ASSERT_IS_VECTOR<rows()>(other);
+        scalar_t result = 0;
+        for (int i = 0; i < rows(); ++i) {
+            result += (*this)(i) * other(i);
+        }
+        return result;
     }
 
  protected:

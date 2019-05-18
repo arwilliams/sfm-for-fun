@@ -239,6 +239,41 @@ void differential_of_log() {
     }
 }
 
+void rectified_identity_is_identity() {
+    const SO3 should_be_identity = SO3().rectified();
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (i == j) {
+                assert(should_be_identity.as_matrix()(i, j) == 1.);
+            } else {
+                assert(should_be_identity.as_matrix()(i, j) == 0.);
+            }
+        }
+    }
+}
+
+void rectified_is_orthogonal() {
+    constexpr double PERTURB = 1e-3;
+    const SO3 almost_orthogonal =
+        SO3(SO3::exp(SO3::DifferentialType(0.01, 0.09, 0.99)).as_matrix() +
+            linalg::Matrix3d::filled(PERTURB));
+    const SO3 should_be_orthogonal = almost_orthogonal.rectified();
+
+    constexpr double TOL = 1e-10;
+    const linalg::Matrix3d should_be_identity =
+        (should_be_orthogonal * should_be_orthogonal.inverse()).as_matrix();
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (i == j) {
+                util::assert_near(should_be_identity(i, j), 1., TOL);
+            } else {
+                util::assert_near(should_be_identity(i, j), 0., TOL);
+            }
+        }
+    }
+    assert_near(almost_orthogonal, should_be_orthogonal, 3 * PERTURB);
+}
+
 }
 }
 
@@ -290,6 +325,12 @@ int main() {
 
     std::cout << "differential_of_log..." << std::endl;
     sfm::liegroups::differential_of_log();
+
+    std::cout << "rectified_identity_is_identity..." << std::endl;
+    sfm::liegroups::rectified_identity_is_identity();
+
+    std::cout << "rectified_is_orthogonal..." << std::endl;
+    sfm::liegroups::rectified_is_orthogonal();
 
     std::cout << "All tests passed!" << std::endl;
     return 0;

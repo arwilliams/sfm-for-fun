@@ -3,8 +3,10 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 #include "math/clamp.hh"
+#include "geometry/project.hh"
 
 namespace sfm {
 namespace liegroups {
@@ -36,11 +38,6 @@ double exp_coeff_c(const double x) {
     return (1. - exp_coeff_a(x)) / (x * x);
 }
 
-//void project_onto_SO3(linalg::Matrix3d &mat) {
-//    // TODO
-//    return;
-//}
-//
 }
 
 SO3::SO3() : rot_(linalg::Matrix3d::identity()) {}
@@ -54,6 +51,48 @@ SO3 SO3::operator*(const SO3 &other) const {
 
 SO3 SO3::inverse() const {
     return SO3(rot_.transpose());
+}
+
+SO3 SO3::rectified() const {
+    // Gram-Schmidt process.
+    int largest_col = -1;
+    double largest_squared_norm = -.1;
+    int smallest_col = -1;
+    double smallest_squared_norm = std::numeric_limits<double>::infinity();
+    for (int i = 0; i < 3; ++i) {
+        const double squared_norm = rot_.col(i).squared_norm();
+        if (squared_norm > largest_squared_norm) {
+            largest_squared_norm = squared_norm;
+            largest_col = i;
+        } else if (squared_norm < smallest_squared_norm) {
+            smallest_squared_norm = squared_norm;
+            smallest_col = i;
+        }
+    }
+
+    int middle_col = -1;
+    for (int i = 0; i < 3; ++i) {
+        if (i != largest_col && i != smallest_col) {
+            middle_col = i;
+        }
+    }
+
+    linalg::Matrix3d result;
+    result.col(largest_col) = rot_.col(largest_col);
+    result.col(middle_col) =
+        rot_.col(middle_col) -
+            geometry::project<3>(rot_.col(middle_col),
+                                 result.col(largest_col));
+    result.col(smallest_col) =
+        rot_.col(smallest_col) - geometry::project<3>(rot_.col(smallest_col),
+                                                      result.col(middle_col))
+                               - geometry::project<3>(rot_.col(smallest_col),
+                                                      result.col(largest_col));
+    for (int i = 0; i < 3; ++i) {
+        result.col(i).normalize();
+    }
+
+    return SO3(result);
 }
 
 linalg::Vector3d SO3::operator*(const linalg::Vector3d &x) const {

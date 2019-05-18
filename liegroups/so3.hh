@@ -38,6 +38,12 @@ class SO3 {
     explicit SO3(const linalg::Matrix3d &rot);
 
     //
+    // Returns an SO(3) whose underlying matrix with the nearest
+    // orthogonal matrix to this one's.
+    //
+    SO3 rectified() const;
+
+    //
     // Group product.
     //
     SO3 operator*(const SO3 &other) const;
