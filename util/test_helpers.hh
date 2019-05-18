@@ -23,5 +23,18 @@ typename G::DifferentialMapping exp_diff_numerical(
     return diff;
 }
 
+template <class G>
+typename G::DifferentialMapping log_diff_numerical(
+    const G &x,
+    const double step_size = 1e-5) {
+    typename G::DifferentialMapping diff;
+    for (int i = 0; i < G::DOF; ++i) {
+        const typename G::DifferentialType step =
+            step_size * G::DifferentialType::unit_vec(i);
+        diff.col(i) = ((G::exp(step) * x).log() - x.log()) / step_size;
+    }
+    return diff;
+}
+
 }
 }

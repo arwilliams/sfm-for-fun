@@ -224,6 +224,21 @@ void differential_of_exp() {
     }
 }
 
+void differential_of_log() {
+    const SO3 rot = SO3::exp(SO3::DifferentialType(0.25, -0.12, 0.33));
+    SO3::DifferentialMapping diff_analytic;
+    rot.log(&diff_analytic);
+    constexpr double STEP_SIZE = 1e-6;
+    const SO3::DifferentialMapping diff_numerical =
+        util::log_diff_numerical<SO3>(rot, STEP_SIZE);
+    constexpr double TOL = 1e-6;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            util::assert_near(diff_analytic(i, j), diff_numerical(i, j), TOL);
+        }
+    }
+}
+
 }
 }
 
@@ -272,6 +287,9 @@ int main() {
 
     std::cout << "differential_of_exp..." << std::endl;
     sfm::liegroups::differential_of_exp();
+
+    std::cout << "differential_of_log..." << std::endl;
+    sfm::liegroups::differential_of_log();
 
     std::cout << "All tests passed!" << std::endl;
     return 0;
