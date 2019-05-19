@@ -7,38 +7,10 @@
 
 #include "math/clamp.hh"
 #include "geometry/project.hh"
+#include "liegroups/exp_coefficients.hh"
 
 namespace sfm {
 namespace liegroups {
-namespace {
-
-constexpr double SMALL_X = 1e-8;
-
-double exp_coeff_a(const double x) {
-	if (x < SMALL_X) {
-		const double x_sq = x * x;
-		return 1. - x_sq / 6. + x_sq * x_sq / 120.;
-	}
-	return std::sin(x) / x;
-}
-
-double exp_coeff_b(const double x) {
-	if (x < SMALL_X) {
-		const double x_sq = x * x;
-		return 0.5 - x_sq / 24. + x_sq * x_sq / 720.;
-	}
-	return (1 - std::cos(x)) / (x * x);
-}
-
-double exp_coeff_c(const double x) {
-    if (x < SMALL_X) {
-        const double x_sq = x * x;
-        return 1. / 6. - x_sq / 120. + x_sq * x_sq / 5040.;
-    }
-    return (1. - exp_coeff_a(x)) / (x * x);
-}
-
-}
 
 SO3::SO3() : rot_(linalg::Matrix3d::identity()) {}
 
@@ -102,19 +74,20 @@ linalg::Vector3d SO3::operator*(const linalg::Vector3d &x) const {
 SO3 SO3::exp(const DifferentialType &w,
              DifferentialMapping *const d_result_by_input) {
     const double theta = w.norm();
-    const double a = exp_coeff_a(theta);
-    const double b = exp_coeff_b(theta);
+
+    const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
     const linalg::Matrix3d skew = SO3::skew_matrix(w);
 
     if (d_result_by_input) {
-        const double c = exp_coeff_c(theta);
-        *d_result_by_input = a * linalg::Matrix3d::identity() +
-                             b * skew +
-                             c * w * w.transpose();
+        *d_result_by_input = coeffs.a * linalg::Matrix3d::identity() +
+                             coeffs.b * skew +
+                             coeffs.c * w * w.transpose();
     }
 
-    return SO3(linalg::Matrix3d::identity() + a * skew + b * skew * skew);
+    return SO3(linalg::Matrix3d::identity() +
+               coeffs.a * skew +
+               coeffs.b * skew * skew);
 }
 
 SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self) const {
@@ -149,17 +122,14 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
             const double sin_theta = std::sqrt(std::max(sin_theta_sq, 0.));
             const double theta = M_PI - std::asin(math::clamp(sin_theta, -1., 1.));
 
-            const double b = exp_coeff_b(theta);
-            const double c = exp_coeff_c(theta);
-
-            const double e = inv_sinc_theta * (b - 2 * c) / 2.;
+            const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
             const linalg::Matrix3d skew = SO3::skew_matrix(log_R);
 
             *d_result_by_self =
                 linalg::Matrix3d::identity() -
                 0.5 * skew +
-                e * skew * skew;
+                coeffs.e * skew * skew;
         }
         return log_R;
     }
@@ -172,16 +142,14 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
         const DifferentialType log_R = (theta / sin_theta) * w;
 
         if (d_result_by_self) {
-            const double b = (1 - cos_theta) / (theta * theta);
-            const double a = sin_theta / theta;
-            const double e = (b - 0.5 * a) / (1. - cos_theta);
+            const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
             const linalg::Matrix3d skew = SO3::skew_matrix(log_R);
 
             *d_result_by_self =
                 linalg::Matrix3d::identity() -
                 0.5 * skew +
-                e * skew * skew;
+                coeffs.e * skew * skew;
         }
 
         return log_R;
@@ -216,16 +184,14 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
     const DifferentialType log_R(sgn_w0 * w0_abs, sgn_w1 * w1_abs, sgn_w2 * w2_abs);
 
     if (d_result_by_self) {
-        const double b = (1 - cos_theta) / (theta * theta);
-        const double a = sin_theta / theta;
-        const double e = (b - 0.5 * a) / (1. - cos_theta);
+        const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
         const linalg::Matrix3d skew = SO3::skew_matrix(log_R);
 
         *d_result_by_self =
             linalg::Matrix3d::identity() -
             0.5 * skew +
-            e * skew * skew;
+            coeffs.e * skew * skew;
     }
 
     return log_R;

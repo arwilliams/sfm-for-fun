@@ -1,6 +1,5 @@
 #include "liegroups/so3.hh"
 
-#include "linalg/io.hh"
 #include "util/test_helpers.hh"
 
 #include <cassert>
