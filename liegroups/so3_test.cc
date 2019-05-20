@@ -42,7 +42,7 @@ SO3 make_rotation_about_z(const double theta) {
 
 void exp_of_zero_is_identity() {
     const linalg::Matrix3d should_be_identity =
-        SO3::exp(SO3::DifferentialType::zero()).as_matrix();
+        SO3::exp(SO3::AlgebraVector::zero()).as_matrix();
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             if (i == j) {
@@ -56,7 +56,7 @@ void exp_of_zero_is_identity() {
 
 void exp_of_rotation_around_x() {
     constexpr double THETA_X = M_PI / 8;
-    const SO3::DifferentialType around_x_axis(THETA_X, 0., 0.);
+    const SO3::AlgebraVector around_x_axis(THETA_X, 0., 0.);
     const SO3 rot_x = SO3::exp(around_x_axis);
 
     const SO3 true_rot_x = make_rotation_about_x(THETA_X);
@@ -66,7 +66,7 @@ void exp_of_rotation_around_x() {
 
 void exp_of_rotation_around_y() {
     constexpr double THETA_Y = -3 * M_PI / 5;
-    const SO3::DifferentialType around_y_axis(0., THETA_Y, 0.);
+    const SO3::AlgebraVector around_y_axis(0., THETA_Y, 0.);
     const SO3 rot_y = SO3::exp(around_y_axis);
     const SO3 true_rot_y = make_rotation_about_y(THETA_Y);
     constexpr double TOL = 1e-10;
@@ -75,7 +75,7 @@ void exp_of_rotation_around_y() {
 
 void exp_of_rotation_around_z() {
     constexpr double THETA_Z = 20 * M_PI / 3;
-    const SO3::DifferentialType around_z_axis(0., 0., THETA_Z);
+    const SO3::AlgebraVector around_z_axis(0., 0., THETA_Z);
     const SO3 rot_z = SO3::exp(around_z_axis);
     constexpr double TOL = 1e-10;
     const SO3 true_rot_z = make_rotation_about_z(THETA_Z);
@@ -84,7 +84,7 @@ void exp_of_rotation_around_z() {
 
 void exp_of_small_angle_rotation() {
     constexpr double THETA_X = 1e-6;
-    const SO3::DifferentialType around_x_axis(THETA_X, 0., 0.);
+    const SO3::AlgebraVector around_x_axis(THETA_X, 0., 0.);
     const linalg::Matrix3d rot_x = SO3::exp(around_x_axis).as_matrix();
 
     constexpr double TOL = 1e-10;
@@ -98,7 +98,7 @@ void exp_of_small_angle_rotation() {
 }
 
 void exp_of_non_axis_aligned() {
-    const SO3::DifferentialType axis_angle(0.1, -0.75, 1.3);
+    const SO3::AlgebraVector axis_angle(0.1, -0.75, 1.3);
     const linalg::Matrix3d skew = SO3::skew_matrix(axis_angle);
     linalg::Matrix3d nth_term = linalg::Matrix3d::identity();
 
@@ -116,7 +116,7 @@ void exp_of_non_axis_aligned() {
 }
 
 void log_of_identity_is_zero() {
-    const SO3::DifferentialType should_be_zero = SO3().log();
+    const SO3::AlgebraVector should_be_zero = SO3().log();
     for (int i = 0; i < 3; ++i) {
         assert(should_be_zero(i) == 0.);
     }
@@ -124,9 +124,9 @@ void log_of_identity_is_zero() {
 
 void log_of_rotation_around_x() {
     constexpr double THETA_X = -M_PI / 7;
-    const SO3::DifferentialType around_x_axis(THETA_X, 0., 0.);
+    const SO3::AlgebraVector around_x_axis(THETA_X, 0., 0.);
     const SO3 rot_x = make_rotation_about_x(THETA_X);
-    const SO3::DifferentialType should_be_orig = rot_x.log();
+    const SO3::AlgebraVector should_be_orig = rot_x.log();
 
     constexpr double TOL = 1e-10;
     for (int i = 0; i < 3; ++i) {
@@ -136,9 +136,9 @@ void log_of_rotation_around_x() {
 
 void log_of_rotation_around_y() {
     constexpr double THETA_Y =  M_PI / 3;
-    const SO3::DifferentialType around_y_axis(0., THETA_Y, 0.);
+    const SO3::AlgebraVector around_y_axis(0., THETA_Y, 0.);
     const SO3 rot_y = make_rotation_about_y(THETA_Y);
-    const SO3::DifferentialType should_be_orig = rot_y.log();
+    const SO3::AlgebraVector should_be_orig = rot_y.log();
 
     constexpr double TOL = 1e-10;
     for (int i = 0; i < 3; ++i) {
@@ -148,9 +148,9 @@ void log_of_rotation_around_y() {
 
 void log_of_rotation_around_z() {
     constexpr double THETA_Z = - M_PI / 10;
-    const SO3::DifferentialType around_z_axis(0., 0., THETA_Z);
+    const SO3::AlgebraVector around_z_axis(0., 0., THETA_Z);
     const SO3 rot_z = make_rotation_about_z(THETA_Z);
-    const SO3::DifferentialType should_be_orig = rot_z.log();
+    const SO3::AlgebraVector should_be_orig = rot_z.log();
 
     constexpr double TOL = 1e-10;
     for (int i = 0; i < 3; ++i) {
@@ -160,9 +160,9 @@ void log_of_rotation_around_z() {
 
 void log_of_small_rotation() {
     constexpr double THETA_Z = 1e-16;
-    const SO3::DifferentialType around_z_axis(0., 0., THETA_Z);
+    const SO3::AlgebraVector around_z_axis(0., 0., THETA_Z);
     const SO3 rot_z = make_rotation_about_z(THETA_Z);
-    const SO3::DifferentialType should_be_orig = rot_z.log();
+    const SO3::AlgebraVector should_be_orig = rot_z.log();
 
     constexpr double TOL = 1e-16;
     for (int i = 0; i < 3; ++i) {
@@ -171,10 +171,10 @@ void log_of_small_rotation() {
 }
 
 void log_of_rotation_by_pi() {
-    const SO3::DifferentialType axis_angle =
-        SO3::DifferentialType(1.2, 0.1, 0.7).normalized() * M_PI;
+    const SO3::AlgebraVector axis_angle =
+        SO3::AlgebraVector(1.2, 0.1, 0.7).normalized() * M_PI;
     const SO3 rot = SO3::exp(axis_angle);
-    const SO3::DifferentialType should_be_orig = rot.log();
+    const SO3::AlgebraVector should_be_orig = rot.log();
 
     constexpr double TOL = 1e-10;
     for (int i = 0; i < 3; ++i) {
@@ -184,10 +184,10 @@ void log_of_rotation_by_pi() {
 
 void log_of_angle_somewhat_close_to_pi() {
     constexpr double THETA = M_PI - 1e-3;
-    const SO3::DifferentialType axis_angle =
-        SO3::DifferentialType(1.2, 0.1, 0.7).normalized() * THETA;
+    const SO3::AlgebraVector axis_angle =
+        SO3::AlgebraVector(1.2, 0.1, 0.7).normalized() * THETA;
     const SO3 rot = SO3::exp(axis_angle);
-    const SO3::DifferentialType should_be_orig = rot.log();
+    const SO3::AlgebraVector should_be_orig = rot.log();
 
     constexpr double TOL = 1e-10;
     for (int i = 0; i < 3; ++i) {
@@ -197,10 +197,10 @@ void log_of_angle_somewhat_close_to_pi() {
 
 void log_of_angle_very_close_to_pi() {
     constexpr double THETA = M_PI - 1e-16;
-    const SO3::DifferentialType axis_angle =
-        SO3::DifferentialType(1.2, 0.1, 0.7).normalized() * THETA;
+    const SO3::AlgebraVector axis_angle =
+        SO3::AlgebraVector(1.2, 0.1, 0.7).normalized() * THETA;
     const SO3 rot = SO3::exp(axis_angle);
-    const SO3::DifferentialType should_be_orig = rot.log();
+    const SO3::AlgebraVector should_be_orig = rot.log();
 
     constexpr double TOL = 1e-10;
     for (int i = 0; i < 3; ++i) {
@@ -209,11 +209,11 @@ void log_of_angle_very_close_to_pi() {
 }
 
 void differential_of_exp() {
-    const SO3::DifferentialType axis_angle(0.1, -0.75, 1.3);
-    SO3::DifferentialMapping diff_analytic;
+    const SO3::AlgebraVector axis_angle(0.1, -0.75, 1.3);
+    SO3::AlgebraTransformation diff_analytic;
     SO3::exp(axis_angle, &diff_analytic);
     constexpr double STEP_SIZE = 1e-6;
-    const SO3::DifferentialMapping diff_numerical =
+    const SO3::AlgebraTransformation diff_numerical =
         util::exp_diff_numerical<SO3>(axis_angle, STEP_SIZE);
     constexpr double TOL = 1e-6;
     for (int i  = 0; i < 3; ++i) {
@@ -224,11 +224,11 @@ void differential_of_exp() {
 }
 
 void differential_of_log() {
-    const SO3 rot = SO3::exp(SO3::DifferentialType(0.25, -0.12, 0.33));
-    SO3::DifferentialMapping diff_analytic;
+    const SO3 rot = SO3::exp(SO3::AlgebraVector(0.25, -0.12, 0.33));
+    SO3::AlgebraTransformation diff_analytic;
     rot.log(&diff_analytic);
     constexpr double STEP_SIZE = 1e-6;
-    const SO3::DifferentialMapping diff_numerical =
+    const SO3::AlgebraTransformation diff_numerical =
         util::log_diff_numerical<SO3>(rot, STEP_SIZE);
     constexpr double TOL = 1e-6;
     for (int i = 0; i < 3; ++i) {
@@ -254,7 +254,7 @@ void rectified_identity_is_identity() {
 void rectified_is_orthogonal() {
     constexpr double PERTURB = 1e-3;
     const SO3 almost_orthogonal =
-        SO3(SO3::exp(SO3::DifferentialType(0.01, 0.09, 0.99)).as_matrix() +
+        SO3(SO3::exp(SO3::AlgebraVector(0.01, 0.09, 0.99)).as_matrix() +
             linalg::Matrix3d::filled(PERTURB));
     const SO3 should_be_orthogonal = almost_orthogonal.rectified();
 

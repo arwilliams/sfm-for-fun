@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
 #include <limits>
 
 #include "math/clamp.hh"
@@ -71,8 +70,8 @@ linalg::Vector3d SO3::operator*(const linalg::Vector3d &x) const {
     return rot_ * x;
 }
 
-SO3 SO3::exp(const DifferentialType &w,
-             DifferentialMapping *const d_result_by_input) {
+SO3 SO3::exp(const AlgebraVector &w,
+             AlgebraTransformation *const d_result_by_input) {
     const double theta = w.norm();
 
     const ExpCoefficients coeffs = compute_exp_coefficients(theta);
@@ -90,11 +89,11 @@ SO3 SO3::exp(const DifferentialType &w,
                coeffs.b * skew * skew);
 }
 
-SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self) const {
+SO3::AlgebraVector SO3::log(SO3::AlgebraTransformation *const d_result_by_self) const {
     // Extract the skew-symmetric part w --- 
     // to get the normalized axis we need to divde w by sin(theta),
     // then the correct norm is theta.
-    SO3::DifferentialType w =
+    SO3::AlgebraVector w =
         SO3::axis_angle_from_skew(0.5 * (rot_ - rot_.transpose()));
 
     const double trace = rot_.trace();
@@ -116,7 +115,7 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
                 + sin_theta_sq * sin_theta_sq * (3.0 / 40.0)
                 + sin_theta_sq * sin_theta_sq * sin_theta_sq * (5.0 / 112.0);
 
-        const DifferentialType log_R = w * inv_sinc_theta;
+        const AlgebraVector log_R = w * inv_sinc_theta;
 
         if (d_result_by_self) {
             const double sin_theta = std::sqrt(std::max(sin_theta_sq, 0.));
@@ -139,7 +138,7 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
         const double theta = std::acos(cos_theta);
         const double sin_theta = std::sqrt(std::max(sin_theta_sq, 0.));
 
-        const DifferentialType log_R = (theta / sin_theta) * w;
+        const AlgebraVector log_R = (theta / sin_theta) * w;
 
         if (d_result_by_self) {
             const ExpCoefficients coeffs = compute_exp_coefficients(theta);
@@ -181,7 +180,7 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
     const double w0w2 = B(2, 0);
     const short sgn_w2 = w0w2 >= 0. ? 1 : -1;
 
-    const DifferentialType log_R(sgn_w0 * w0_abs, sgn_w1 * w1_abs, sgn_w2 * w2_abs);
+    const AlgebraVector log_R(sgn_w0 * w0_abs, sgn_w1 * w1_abs, sgn_w2 * w2_abs);
 
     if (d_result_by_self) {
         const ExpCoefficients coeffs = compute_exp_coefficients(theta);
@@ -197,7 +196,15 @@ SO3::DifferentialType SO3::log(SO3::DifferentialMapping *const d_result_by_self)
     return log_R;
 }
 
-linalg::Matrix3d SO3::skew_matrix(const DifferentialType &w) {
+SO3::AlgebraTransformation SO3::adjoint() const {
+    return rot_;
+}
+
+SO3::AlgebraTransformation SO3::adjoint(const AlgebraVector &w) {
+    return SO3::skew_matrix(w);
+}
+
+linalg::Matrix3d SO3::skew_matrix(const AlgebraVector &w) {
     linalg::Matrix3d wx = linalg::Matrix3d::zero();
     wx(1, 0) = w(2);
     wx(0, 1) = -w(2);
@@ -211,8 +218,8 @@ linalg::Matrix3d SO3::skew_matrix(const DifferentialType &w) {
     return wx;
 }
 
-SO3::DifferentialType SO3::axis_angle_from_skew(const linalg::Matrix3d &skew) {
-    return DifferentialType(skew(2, 1), skew(0, 2), skew(1, 0));
+SO3::AlgebraVector SO3::axis_angle_from_skew(const linalg::Matrix3d &skew) {
+    return AlgebraVector(skew(2, 1), skew(0, 2), skew(1, 0));
 }
 
 }  // namespace liegroups
