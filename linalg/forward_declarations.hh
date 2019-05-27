@@ -12,11 +12,8 @@ class MatrixBase;
 template <typename Scalar, int Rows, int Cols>
 class Matrix;
 
-template <class Mat>
-class Column;
-
-template <class Mat>
-class Row;
+template <class Derived, int Rows, int Cols>
+class Block;
 
 template <class Derived>
 class TransposeMatrix;
@@ -27,14 +24,11 @@ class CmptWiseBinaryMatrixOpResult;
 template <class Derived, class Scalar, class BinaryOp>
 class CmptWiseMatrixScalarOpResult;
 
+template <class Derived, class UnaryOp>
+class CmptWiseUnaryMatrixOpResult;
+
 template <class Derived, class OtherDerived>
 class MatrixProductResult;
-
-template <class Derived>
-class Column;
-
-template <class Derived>
-class Row;
 
 }
 }

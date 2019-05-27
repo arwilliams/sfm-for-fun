@@ -17,8 +17,6 @@ struct traits<MatrixBase<Derived>> {
 	typedef traits<Derived> traits_t;
 	typedef typename traits_t::scalar_t scalar_t;
 	typedef typename traits_t::transpose_t transpose_t;
-	typedef typename traits_t::column_t column_t;
-	typedef typename traits_t::row_t row_t;
 	static constexpr int rows = traits_t::rows;
 	static constexpr int cols = traits_t::cols;
 };
@@ -27,8 +25,6 @@ template <typename Scalar, int Rows, int Cols>
 struct traits<Matrix<Scalar, Rows, Cols>> {
 	typedef Matrix<Scalar, Rows, Cols> matrix_t;
 	typedef TransposeMatrix<matrix_t> transpose_t;
-	typedef Column<matrix_t> column_t;
-	typedef Row<matrix_t> row_t;
 	typedef Scalar scalar_t;
 	static constexpr int rows = Rows;
 	static constexpr int cols = Cols;
@@ -41,33 +37,15 @@ struct traits<TransposeMatrix<Derived>> {
 
 	static constexpr int rows = traits<Derived>::cols;
 	static constexpr int cols = traits<Derived>::rows;
-
-    typedef typename traits<Derived>::row_t column_t;
-    typedef typename traits<Derived>::column_t row_t;
 };
 
-template <class Derived>
-struct traits<Column<Derived>> {
-	typedef Column<Derived> self_t;
+template <class Derived, int Rows, int Cols>
+struct traits<Block<Derived, Rows, Cols>> {
 	typedef typename traits<Derived>::scalar_t scalar_t;
-	typedef typename traits<Derived>::transpose_t transpose_t;
-	typedef self_t column_t;
-    typedef Row<self_t> row_t;
-
-	static constexpr int rows = traits<Derived>::rows;
-	static constexpr int cols = 1;
-};
-
-template <class Derived>
-struct traits<Row<Derived>> {
-	typedef Row<Derived> self_t;
-	typedef typename traits<Derived>::scalar_t scalar_t;
-	typedef typename traits<Derived>::transpose_t transpose_t;
-	typedef self_t row_t;
-    typedef Column<self_t> column_t;
-
-	static constexpr int rows = 1;
-	static constexpr int cols = traits<Derived>::cols;
+	typedef Block<Derived, Rows, Cols> matrix_t;
+	static constexpr int rows = Rows;
+	static constexpr int cols = Cols;
+    typedef TransposeMatrix<matrix_t> transpose_t;
 };
 
 template <class Derived, class OtherDerived, class BinaryOp>
@@ -83,8 +61,6 @@ struct traits<CmptWiseBinaryMatrixOpResult<Derived, OtherDerived, BinaryOp>> {
 									   : traits<OtherDerived>::cols;
 
 	typedef TransposeMatrix<matrix_t> transpose_t;
-	typedef Column<matrix_t> column_t;
-	typedef Row<matrix_t> row_t;
 };
 
 template <class Derived, class Scalar, class BinaryOp>
@@ -96,8 +72,17 @@ struct traits<CmptWiseMatrixScalarOpResult<Derived, Scalar, BinaryOp>> {
 	static constexpr int cols = traits<Derived>::cols;
 
 	typedef TransposeMatrix<matrix_t> transpose_t;
-	typedef Column<matrix_t> column_t;
-	typedef Row<matrix_t> row_t;
+};
+
+template <class Derived, class UnaryOp>
+struct traits<CmptWiseUnaryMatrixOpResult<Derived, UnaryOp>> {
+	typedef typename traits<Derived>::scalar_t scalar_t;
+	typedef CmptWiseUnaryMatrixOpResult<Derived, UnaryOp> matrix_t;
+
+	static constexpr int rows = traits<Derived>::rows;
+	static constexpr int cols = traits<Derived>::cols;
+
+	typedef TransposeMatrix<matrix_t> transpose_t;
 };
 
 template <class Derived, class OtherDerived>
@@ -109,8 +94,6 @@ struct traits<MatrixProductResult<Derived, OtherDerived>> {
 	static constexpr int cols = traits<OtherDerived>::cols;
 
 	typedef TransposeMatrix<matrix_t> transpose_t;
-	typedef Column<matrix_t> column_t;
-	typedef Row<matrix_t> row_t;
 };
 
 template <class Derived>
@@ -185,8 +168,6 @@ class MatrixBase {
 
 	typedef typename traits<Derived>::scalar_t scalar_t;
 	typedef typename traits<Derived>::transpose_t transpose_t;
-	typedef typename traits<Derived>::column_t column_t;
-	typedef typename traits<Derived>::row_t row_t;
 
 	static constexpr int rows() { return traits<Derived>::rows; }
 	static constexpr int cols() { return traits<Derived>::cols; }
@@ -206,11 +187,14 @@ class MatrixBase {
 
 	transpose_t transpose() const { return derived().transpose(); }
 
-	const column_t col(int j) const { return derived().col(j); }
-	column_t col(int j) { return derived().col(j); }
+    template<int Rows, int Cols>
+    auto block(int i0, int j0) const { return derived().block<Rows, Cols>(i0, j0); }
 
-	const row_t row(int i) const { return derived().row(i); }
-	row_t row(int i) { return derived().row(i); }
+    auto row(int i) const { return derived().row(i); }
+    auto row(int i) { return derived().row(i); }
+
+    auto col(int j) const { return derived().col(j); }
+    auto col(int j) { return derived().col(j); }
 
     MatrixBase &operator=(const MatrixBase<Derived> &other) {
         this->safe_assign(other);
@@ -346,8 +330,6 @@ class Matrix : public MatrixBase<Matrix<Scalar, Rows, Cols>> {
  	typedef Matrix<Scalar, Rows, Cols> self_t;
  	typedef typename traits<self_t>::scalar_t scalar_t;
  	typedef typename traits<self_t>::transpose_t transpose_t;
- 	typedef typename traits<self_t>::column_t column_t;
- 	typedef typename traits<self_t>::row_t row_t;
 
 	Matrix() = default;
 
@@ -371,13 +353,23 @@ class Matrix : public MatrixBase<Matrix<Scalar, Rows, Cols>> {
         return data_[i];
     }
 
-	transpose_t transpose() const { return transpose_t(*this); }
+	auto transpose() const { return transpose_t(*this); }
+    
+    template <int BlockRows, int BlockCols>
+    auto block(int i0, int j0) const {
+        return Block<self_t, BlockRows, BlockCols>(*this, i0, j0);
+    }
 
-	const column_t col(int j) const { return column_t(*this, j); }
-	column_t col(int j) { return column_t(*this, j); }
+    template <int BlockRows, int BlockCols>
+    auto block(int i0, int j0) {
+        return Block<self_t, BlockRows, BlockCols>(*this, i0, j0);
+    }
 
-	const row_t row(int i) const { return row_t(*this, i); }
-	row_t row(int i) { return row_t(*this, i); }
+    auto col(int j) const { return Block<self_t, Rows, 1>(*this, 0, j); }
+    auto col(int j) { return Block<self_t, Rows, 1>(*this, 0, j); }
+
+    auto row(int i) const { return Block<self_t, 1, Cols>(*this, i, 0); }
+    auto row(int i) { return Block<self_t, 1, Cols>(*this, i, 0); }
 
 	template <class OtherDerived>
 	Matrix(const MatrixBase<OtherDerived> &other) {
@@ -466,6 +458,22 @@ class CmptWiseMatrixScalarOpResult : public MatrixBase<CmptWiseMatrixScalarOpRes
  	const Scalar s_;
 };
 
+template <class Derived, class UnaryOp>
+class CmptWiseUnaryMatrixOpResult : public MatrixBase<CmptWiseUnaryMatrixOpResult<Derived, UnaryOp>> {
+ public:
+ 	CmptWiseUnaryMatrixOpResult(const Derived &a) : a_(a) {}
+
+	const UnaryOp op = UnaryOp();
+
+	typedef CmptWiseUnaryMatrixOpResult<Derived, UnaryOp> self_t;
+	typedef typename traits<self_t>::scalar_t scalar_t;
+	typedef typename traits<self_t>::transpose_t transpose_t;
+
+	scalar_t operator()(int i, int j) const { return op(a_(i, j)); }
+ private:
+ 	const Derived &a_;
+};
+
 template <class Derived, class OtherDerived>
 class MatrixProductResult : public MatrixBase<MatrixProductResult<Derived, OtherDerived>> {
  public:
@@ -489,80 +497,35 @@ class MatrixProductResult : public MatrixBase<MatrixProductResult<Derived, Other
  	const OtherDerived &b_;
 };
 
-template <class Derived>
-class Column : public MatrixBase<Column<Derived>> {
+template <class Derived, int Rows, int Cols>
+class Block : public MatrixBase<Block<Derived, Rows, Cols>> {
  public:
-     Column(const Derived &a, int j) : const_a_(a), j_(j) {}
-     Column(Derived &a, int j) : const_a_(a), a_(&a), j_(j) {}
+    Block(const Derived &a, int i0, int j0)
+        : const_a_(a), i0_(i0), j0_(j0) {}
+    Block(Derived &a, int i0, int j0)
+        : const_a_(a), a_(&a), i0_(i0), j0_(j0) {}
 
-     typedef Column<Derived> self_t;
+     typedef Block<Derived, Rows, Cols> self_t;
      typedef typename traits<self_t>::scalar_t scalar_t;
 
-     using MatrixBase<Column<Derived>>::operator=;
+     using MatrixBase<Block<Derived, Rows, Cols>>::operator=;
 
-     Column &operator=(const Column<Derived> &other) {
-         return static_cast<Column &>(MatrixBase<Column<Derived>>::operator=(other));
+     Block &operator=(const Block<Derived, Rows, Cols> &other) {
+         return static_cast<Block &>(MatrixBase<Block<Derived, Rows, Cols>>::operator=(other));
      }
 
      scalar_t operator()(int i, int j) const {
-         assert(j == 0);
-         return const_a_(i, j_);
+         return const_a_(i0_ + i, j0_ + j);
      }
 
      scalar_t &operator()(int i, int j) {
-         assert(j == 0);
-         return (*a_)(i, j_);
+         return (*a_)(i0_ + i, j0_ + j);
      }
 
-     scalar_t operator()(int i) const {
-         return const_a_(i, j_);
-     }
-
-     scalar_t &operator()(int i) {
-         return (*a_)(i, j_);
-     }
- private:
      const Derived &const_a_;
      Derived *a_;
-     int j_;
-};
-
-template <typename Derived>
-class Row : public MatrixBase<Row<Derived>> {
- public:
-     Row(const Derived &a, int i) : const_a_(a), i_(i) {}
-     Row(Derived &a, int i) : const_a_(a), a_(&a), i_(i) {}
-
-     typedef Row<Derived> self_t;
-     typedef typename traits<self_t>::scalar_t scalar_t;
-
-     using MatrixBase<Row<Derived>>::operator=;
-
-     Row &operator=(const Row<Derived> &other) {
-         return static_cast<Row &>(MatrixBase<Row<Derived>>::operator=(other));
-     }
-
-     scalar_t operator()(int i, int j) const {
-         assert(i == 0);
-         return const_a_(i_, j);
-     }
-
-     scalar_t &operator()(int i, int j) {
-         assert(i == 0);
-         return (*a_)(i_, j);
-     }
-
-     scalar_t operator()(int j) const {
-         return const_a_(i_, j);
-     }
-
-     scalar_t &operator()(int j) {
-         return (*a_)(i_, j);
-     }
- private:
-     const Derived &const_a_;
-     Derived *a_;
-     int i_;
+     int i0_;
+     int j0_;
 };
 
 template <class Derived, class OtherDerived>
@@ -611,8 +574,19 @@ MatrixProductResult<Derived, OtherDerived> operator*(
     return MatrixProductResult<Derived, OtherDerived>(a.derived(), b.derived());
 }
 
+template <class Derived>
+using MatrixNegateResult = CmptWiseUnaryMatrixOpResult<Derived, std::negate<typename traits<Derived>::scalar_t>>;
+
+template <class Derived>
+MatrixNegateResult<Derived> operator-(const MatrixBase<Derived> &a) {
+    return MatrixNegateResult<Derived>(a.derived());
+}
+
 using Matrix3d = Matrix<double, 3, 3>;
 using Vector3d = Matrix<double, 3, 1>;
+
+using Matrix4d = Matrix<double, 4, 4>;
+using Vector4d = Matrix<double, 4, 1>;
 
 }  // namespace linalg
 }  // namespace sfm
