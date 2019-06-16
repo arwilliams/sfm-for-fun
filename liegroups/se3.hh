@@ -7,13 +7,13 @@ namespace sfm {
 namespace liegroups {
 
 //
-// An element of the Lie group SE(3), representing an
-// orthogonal linear transformation of 3-space.
+// An element of the Lie group SE(3), representing a
+// rigid transformation of 3-space.
 //
 class SE3 {
  public:
     //
-    // SE(3) has dimension 3
+    // SE(3) has dimension 6
     //
     static constexpr int DOF = 6;
 
@@ -86,6 +86,13 @@ class SE3 {
     static AlgebraTransformation adjoint(const AlgebraVector &w);
 
     linalg::Matrix4d as_matrix() const;
+
+    //
+    // Applies the group action per operator* and returns the
+    // right-invariant differential with respect to the group.
+    //
+    linalg::Vector3d apply_action(const linalg::Vector3d &x,
+                                  linalg::Matrix<double, 3, DOF> &diff) const;
 
     //
     // For convenience.

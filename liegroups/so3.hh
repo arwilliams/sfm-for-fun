@@ -6,8 +6,8 @@ namespace sfm {
 namespace liegroups {
 
 //
-// An element of the Lie group SO(3), representing an
-// orthogonal linear transformation of 3-space.
+// An element of the Lie group SO(3), representing a
+// rigid transformation of 3-space preserving the origin.
 //
 class SO3 {
  public:
@@ -80,6 +80,13 @@ class SO3 {
     static AlgebraTransformation adjoint(const AlgebraVector &w);
 
     const linalg::Matrix3d &as_matrix() const { return rot_; }
+
+    //
+    // Applies the group action per operator* and returns the
+    // right-invariant differential with respect to the group.
+    //
+    linalg::Vector3d apply_action(const linalg::Vector3d &x,
+                                  linalg::Matrix<double, 3, DOF> &diff) const;
 
     //
     // For convenience

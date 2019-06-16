@@ -204,6 +204,13 @@ SO3::AlgebraTransformation SO3::adjoint(const AlgebraVector &w) {
     return SO3::skew_matrix(w);
 }
 
+linalg::Vector3d SO3::apply_action(const linalg::Vector3d &x,
+                                   linalg::Matrix<double, 3, DOF> &diff) const {
+    const linalg::Vector3d transformed = (*this) * x;
+    diff = adjoint(-transformed);
+    return transformed;
+}
+
 linalg::Matrix3d SO3::skew_matrix(const AlgebraVector &w) {
     linalg::Matrix3d wx = linalg::Matrix3d::zero();
     wx(1, 0) = w(2);

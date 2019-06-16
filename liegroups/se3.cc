@@ -74,5 +74,13 @@ linalg::Matrix4d SE3::as_matrix() const {
     return mat;
 }
 
+linalg::Vector3d SE3::apply_action(const linalg::Vector3d &x,
+                                   linalg::Matrix<double, 3, DOF> &diff) const {
+    const linalg::Vector3d transformed = (*this) * x;
+    diff.block<3, 3>(0, 0) = SO3::adjoint(-transformed);
+    diff.block<3, 3>(0, 3) = linalg::Matrix3d::identity();
+    return transformed;
+}
+
 }
 }
