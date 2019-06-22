@@ -88,11 +88,6 @@ class SO3 {
     linalg::Vector3d apply_action(const linalg::Vector3d &x,
                                   linalg::Matrix<double, 3, DOF> &diff) const;
 
-    //
-    // For convenience
-    //
-    static linalg::Matrix3d skew_matrix(const AlgebraVector &w); 
-
     static AlgebraVector axis_angle_from_skew(const linalg::Matrix3d &skew);
  private:
     linalg::Matrix3d rot_;

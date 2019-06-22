@@ -99,7 +99,7 @@ void exp_of_small_angle_rotation() {
 
 void exp_of_non_axis_aligned() {
     const SO3::AlgebraVector axis_angle(0.1, -0.75, 1.3);
-    const linalg::Matrix3d skew = SO3::skew_matrix(axis_angle);
+    const SO3::AlgebraTransformation skew = SO3::adjoint(axis_angle);
     linalg::Matrix3d nth_term = linalg::Matrix3d::identity();
 
     linalg::Matrix3d exp_numerical = linalg::Matrix3d::zero();

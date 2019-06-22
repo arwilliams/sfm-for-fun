@@ -76,7 +76,7 @@ SO3 SO3::exp(const AlgebraVector &w,
 
     const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
-    const linalg::Matrix3d skew = SO3::skew_matrix(w);
+    const SO3::AlgebraTransformation skew = SO3::adjoint(w);
 
     if (d_result_by_input) {
         *d_result_by_input = coeffs.a * linalg::Matrix3d::identity() +
@@ -123,7 +123,7 @@ SO3::AlgebraVector SO3::log(SO3::AlgebraTransformation *const d_result_by_self) 
 
             const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
-            const linalg::Matrix3d skew = SO3::skew_matrix(log_R);
+            const linalg::Matrix3d skew = SO3::adjoint(log_R);
 
             *d_result_by_self =
                 linalg::Matrix3d::identity() -
@@ -143,7 +143,7 @@ SO3::AlgebraVector SO3::log(SO3::AlgebraTransformation *const d_result_by_self) 
         if (d_result_by_self) {
             const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
-            const linalg::Matrix3d skew = SO3::skew_matrix(log_R);
+            const linalg::Matrix3d skew = SO3::adjoint(log_R);
 
             *d_result_by_self =
                 linalg::Matrix3d::identity() -
@@ -185,7 +185,7 @@ SO3::AlgebraVector SO3::log(SO3::AlgebraTransformation *const d_result_by_self) 
     if (d_result_by_self) {
         const ExpCoefficients coeffs = compute_exp_coefficients(theta);
 
-        const linalg::Matrix3d skew = SO3::skew_matrix(log_R);
+        const linalg::Matrix3d skew = SO3::adjoint(log_R);
 
         *d_result_by_self =
             linalg::Matrix3d::identity() -
@@ -201,18 +201,7 @@ SO3::AlgebraTransformation SO3::adjoint() const {
 }
 
 SO3::AlgebraTransformation SO3::adjoint(const AlgebraVector &w) {
-    return SO3::skew_matrix(w);
-}
-
-linalg::Vector3d SO3::apply_action(const linalg::Vector3d &x,
-                                   linalg::Matrix<double, 3, DOF> &diff) const {
-    const linalg::Vector3d transformed = (*this) * x;
-    diff = adjoint(-transformed);
-    return transformed;
-}
-
-linalg::Matrix3d SO3::skew_matrix(const AlgebraVector &w) {
-    linalg::Matrix3d wx = linalg::Matrix3d::zero();
+    SO3::AlgebraTransformation wx = SO3::AlgebraTransformation::zero();
     wx(1, 0) = w(2);
     wx(0, 1) = -w(2);
 
@@ -223,6 +212,13 @@ linalg::Matrix3d SO3::skew_matrix(const AlgebraVector &w) {
     wx(1, 2) = -w(0);
 
     return wx;
+}
+
+linalg::Vector3d SO3::apply_action(const linalg::Vector3d &x,
+                                   linalg::Matrix<double, 3, DOF> &diff) const {
+    const linalg::Vector3d transformed = (*this) * x;
+    diff = adjoint(-transformed);
+    return transformed;
 }
 
 SO3::AlgebraVector SO3::axis_angle_from_skew(const linalg::Matrix3d &skew) {
