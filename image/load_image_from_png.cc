@@ -1,7 +1,6 @@
 #include "image/load_image_from_png.hh"
 
 #include <cassert>
-#include <iostream>
 #include <stdexcept>
 
 #include "stdio.h"
@@ -66,15 +65,6 @@ Image load_image_from_png(const std::string &filename) {
         throw std::runtime_error("png_get_IHDR failed: " + filename);
     }
 
-    constexpr int BIT_DEPTH = 8;
-    assert(bit_depth = BIT_DEPTH);
-
-    constexpr int IMG_WIDTH = 1920;
-    assert(width = IMG_WIDTH);
-
-    constexpr int IMG_HEIGHT = 1155;
-    assert(height = IMG_HEIGHT);
-
     if (setjmp(png_jmpbuf(png_ptr))) {
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         fclose(fin);
@@ -83,9 +73,6 @@ Image load_image_from_png(const std::string &filename) {
 
     const png_uint_32 row_bytes = png_get_rowbytes(png_ptr, info_ptr);
     const int channels = png_get_channels(png_ptr, info_ptr);
-
-    constexpr int CHANNELS = 4;
-    assert(channels == CHANNELS);
 
     assert(channels * width == row_bytes);
 
@@ -99,9 +86,6 @@ Image load_image_from_png(const std::string &filename) {
     png_read_image(png_ptr, row_pointers);
 
     const Image image(width, height, channels, std::move(image_data));
-    assert(image.width() == IMG_WIDTH);
-    assert(image.height() == IMG_HEIGHT);
-    assert(image.channels() == CHANNELS);
 
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     fclose(fin);
