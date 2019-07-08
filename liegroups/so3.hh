@@ -65,7 +65,7 @@ class SO3 {
                    AlgebraTransformation *const d_result_by_input = nullptr);
 
     //
-    // Inverse of exponential and its right-invariant differential.
+    // Inverse of exponential and its right-invariant Jacobian matrix.
     //
     AlgebraVector log(AlgebraTransformation *const d_result_by_self = nullptr) const;
 
@@ -83,7 +83,7 @@ class SO3 {
 
     //
     // Applies the group action per operator* and returns the
-    // right-invariant differential with respect to the group.
+    // right-invariant Jacobian with respect to the group.
     //
     linalg::Vector3d apply_action(const linalg::Vector3d &x,
                                   linalg::Matrix<double, 3, DOF> &diff) const;
